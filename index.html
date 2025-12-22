@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Climate Action & Health Co-Benefits</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+
+<h2>Climate Action is a Public Health Investment</h2>
+<p>Interactive visualization of health co-benefits from climate action.</p>
+
+<div id="chart" style="width:100%;max-width:900px;height:500px;"></div>
+
+<script>
+Plotly.d3.csv("data/Level_1.csv", function(err, rows){
+
+  function unpack(rows, key){
+    return rows.map(r => r[key]);
+  }
+
+  // GANTI nama kolom sesuai CSV kamu
+  const region = unpack(rows, "Region");
+  const cobenefit = unpack(rows, "Co-benefit");
+  const value = unpack(rows, "Value");
+
+  // Filter hanya Health
+  let x = [];
+  let y = [];
+
+  for(let i=0; i<rows.length; i++){
+    if(cobenefit[i].toLowerCase().includes("health")){
+      x.push(region[i]);
+      y.push(+value[i]);
+    }
+  }
+
+  let data = [{
+    type: 'bar',
+    x: x,
+    y: y,
+    hovertemplate: 
+      "<b>%{x}</b><br>" +
+      "Health Impact: %{y}<extra></extra>"
+  }];
+
+  let layout = {
+    yaxis: {title: "Health Impact"},
+    xaxis: {title: "Region"},
+    margin: {b: 120},
+  };
+
+  Plotly.newPlot('chart', data, layout);
+});
+</script>
+
+</body>
+</html>
