@@ -488,35 +488,119 @@ function renderCharts() {
   const row = cache.byArea.get(currentRegion);
   if (!row) return;
 
-  const labels = Array.from(selectedBenefits).map(b => benefitLabels[b]);
-  const values = Array.from(selectedBenefits).map(b => row[b] || 0);
+  const benefits = Array.from(selectedBenefits);
+  const labels = benefits.map(b => benefitLabels[b]);
+  const values = benefits.map(b => row[b] || 0);
+
+  const bx = benefits[0];
+  const by = benefits[1];
 
   let data;
+  let layout;
 
   if (chartType === "pie") {
+  
+  data = [{
+    type: "pie",
+    labels,
+    values: values.map(v => Math.abs(v)),
+    sort: false,
+    textinfo: "none",                 
+    hovertemplate: "%{label}<br>Score=%{value}<extra></extra>",
+    hole: 0.35                        
+  }];
+
+  layout = {
+    ...baseLayout(`Breakdown: ${currentRegion}`, 350),
+    margin: { l: 20, r: 20, t: 60, b: 20 }, 
+    showlegend: true,
+    legend: { orientation: "v" },          
+  };
+
+  } else if (chartType === "heatmap") {
+    // Heatmap 1 baris: area (Y) vs benefit (X)
     data = [{
-      type: "pie",
-      labels,
-      values: values.map(v => Math.max(0, v)),
-      textinfo: "label+percent",
+      type: "heatmap",
+      x: labels,
+      y: [currentRegion],
+      z: [values],
+      hovertemplate: "%{y}<br>%{x}<br>Score=%{z}<extra></extra>",
     }];
+    layout = baseLayout(`Breakdown (Heatmap): ${currentRegion}`, 350, "Benefit", "Score");
+
+  } else if (chartType === "scatter") {
+    // Scatter butuh minimal 2 benefit
+    if (!bx || !by) {
+      data = [{
+        type: "bar",
+        x: labels,
+        y: values,
+        hovertemplate: "%{x}<br>Score=%{y}<extra></extra>"
+      }];
+      layout = baseLayout(`Breakdown (Bar): ${currentRegion}`, 350, "Benefit", "Score");
+    } else {
+      // konteks: Top-N (berdasarkan Total Impact) + highlight area terpilih
+      const top = getTopNAreasBySum(Math.min(topN, 50));
+
+      const xTop = [];
+      const yTop = [];
+      const textTop = [];
+      for (const t of top) {
+        const r = cache.byArea.get(t.area);
+        xTop.push(r?.[bx] || 0);
+        yTop.push(r?.[by] || 0);
+        textTop.push(t.area);
+      }
+
+      const xSel = row[bx] || 0;
+      const ySel = row[by] || 0;
+
+      data = [
+        {
+          type: "scattergl",
+          mode: "markers",
+          x: xTop,
+          y: yTop,
+          text: textTop,
+          name: `Top-${Math.min(topN, 50)} (context)`,
+          hovertemplate: "%{text}<br>x=%{x}<br>y=%{y}<extra></extra>",
+          marker: { size: 7 }
+        },
+        {
+          type: "scattergl",
+          mode: "markers",
+          x: [xSel],
+          y: [ySel],
+          text: [currentRegion],
+          name: "Selected Area",
+          hovertemplate: "%{text}<br>x=%{x}<br>y=%{y}<extra></extra>",
+          marker: { size: 14, symbol: "diamond" }
+        }
+      ];
+
+      layout = baseLayout(
+        `Scatter: ${currentRegion} (highlighted)`,
+        350,
+        benefitLabels[bx],
+        benefitLabels[by]
+      );
+    }
+
   } else {
-    // fallback aman untuk bar / heatmap / scatter
+    // default bar
     data = [{
       type: "bar",
       x: labels,
       y: values,
+      name: "Selected Impact",
       hovertemplate: "%{x}<br>Score=%{y}<extra></extra>"
     }];
+    layout = baseLayout(`Breakdown (Bar): ${currentRegion}`, 350, "Benefit", "Score");
   }
 
-  Plotly.react(
-    "mainChart",
-    data,
-    baseLayout(`Breakdown for ${currentRegion} (Selected Impact)`, 350, "Benefit", "Score"),
-    plotConfig
-  );
+  Plotly.react("mainChart", data, layout, plotConfig);
 }
+
 
   // --- COMPARISON (Ranking by dataset sum) ---
   const top = getTopNAreasBySum(topN);
