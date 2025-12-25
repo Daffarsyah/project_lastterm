@@ -1,89 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Climate Action & Health Co-Benefits Dashboard</title>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <link rel="stylesheet" href="styles.css">
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <script defer src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script defer src="script.js"></script>
 </head>
+
 <body>
   <div class="container">
     <header>
       <h1>🌍 Climate Action & Health Co-Benefits</h1>
-      <p>Interactive visualization of health co-benefits from climate action across different regions</p>
     </header>
 
     <div id="loading" class="loading">Loading data...</div>
-    <div id="error" class="error" style="display: none;"></div>
+    <div id="error" class="error" style="display:none;"></div>
 
-    <div id="dashboard" class="dashboard" style="display: none;">
+    <div id="dashboard" class="dashboard" style="display:none;">
       <aside class="controls">
-        <h3>📊 Dashboard Controls</h3>
-        
+        <div class="controls-header">
+          <h3>📊 Controls</h3>
+          <span class="badge" id="modeBadge">Overview Mode</span>
+        </div>
+
         <div class="control-group">
-          <label for="regionSelect">Select Region:</label>
+          <label for="regionSearch">Search Area (optional):</label>
+          <input id="regionSearch" type="text" placeholder="Type to search small_area..." />
+          <div class="helper">To keep the web fast, the dropdown shows limited results.</div>
+        </div>
+
+        <div class="control-group">
+          <label for="regionSelect">Select Area:</label>
           <select id="regionSelect">
-            <option value="all">All Regions</option>
+            <option value="all">All Areas (Aggregated)</option>
           </select>
         </div>
 
         <div class="control-group">
-          <label>Co-benefit Categories:</label>
-          <div class="checkbox-group" id="benefitCheckboxes">
-            <!-- Dynamically populated -->
-          </div>
+          <label for="topN">Top-N (Ranking uses dataset <code>sum</code>):</label>
+          <select id="topN">
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="30" selected>30</option>
+            <option value="50">50</option>
+          </select>
+          <div class="helper">Ranking is based on the dataset’s <code>sum</code> column (more accurate/credible).</div>
         </div>
 
         <div class="control-group">
-          <label for="chartType">Chart Type:</label>
+          <label for="chartType">Overview Chart Type:</label>
           <select id="chartType">
-            <option value="bar">Bar Chart</option>
-            <option value="scatter">Scatter Plot</option>
-            <option value="heatmap">Heatmap</option>
-            <option value="pie">Pie Chart</option>
+            <option value="bar" selected>Bar (fast)</option>
+            <option value="pie">Pie</option>
+            <option value="heatmap">Heatmap (Top-N x Benefits)</option>
+            <option value="scatter">Scatter (Top-N, WebGL)</option>
           </select>
         </div>
 
         <div class="control-group">
-          <label for="sortBy">Sort By:</label>
-          <select id="sortBy">
-            <option value="region">Region</option>
-            <option value="value">Value (High to Low)</option>
-            <option value="value-asc">Value (Low to High)</option>
-          </select>
+          <label>Co-benefit Categories (for “Selected Impact”):</label>
+          <div class="checkbox-group" id="benefitCheckboxes"></div>
         </div>
 
-        <button class="btn" onclick="updateCharts()">Update Charts</button>
-        
         <div class="region-info" id="regionInfo">
-          Select a region to see detailed information
+          Tip: All Areas shows aggregated overview; choose one area for detailed breakdown.
+        </div>
+
+        <div class="about-box" id="aboutBox">
+          <h4>ℹ️ About the Data & Method</h4>
+          <ul>
+            <li><strong>Source:</strong> <span id="dataSourceText">Level_1.csv (course dataset)</span></li>
+            <li><strong>Parsing:</strong> delimiter <code>;</code>, decimal comma → dot, missing values → 0</li>
+            <li><strong>Total Impact:</strong> uses dataset <code>sum</code> (credible reference)</li>
+            <li><strong>Selected Impact:</strong> sum of chosen co-benefit columns (interactive)</li>
+            <li><strong>Performance:</strong> charts use aggregation + Top-N (not all 46k labels)</li>
+          </ul>
         </div>
       </aside>
 
       <main class="main-content">
-        <div class="stats-container" id="statsContainer">
-          <!-- Stats will be dynamically populated -->
+        <div class="stats-container" id="statsContainer"></div>
+
+        <div class="insight-container">
+          <h3>Key Takeaways</h3>
+          <ul id="takeawaysList"></ul>
         </div>
 
         <div class="chart-container">
-          <h3>Co-benefits Overview</h3>
+          <h3>Overview</h3>
           <div id="mainChart" style="width:100%;height:350px;"></div>
         </div>
 
         <div class="chart-container">
-          <h3>Regional Comparison</h3>
+          <h3>Top-N Areas (by dataset <code>sum</code>)</h3>
           <div id="comparisonChart" style="width:100%;height:350px;"></div>
         </div>
 
         <div class="chart-container chart-full">
-          <h3>Detailed Analysis</h3>
+          <h3>Details</h3>
           <div id="detailChart" style="width:100%;height:400px;"></div>
         </div>
+
+        <footer class="footer">
+          <span id="footerMeta"></span>
+        </footer>
       </main>
     </div>
   </div>
-
-  <script src="script.js"></script>
 </body>
 </html>
