@@ -28,12 +28,6 @@
         </div>
 
         <div class="control-group">
-          <label for="regionSearch">Search Area (optional):</label>
-          <input id="regionSearch" type="text" placeholder="Type to search small_area..." />
-          <div class="helper">To keep the web fast, the dropdown shows limited results.</div>
-        </div>
-
-        <div class="control-group">
           <label for="regionSelect">Select Area:</label>
           <select id="regionSelect">
             <option value="all">All Areas (Aggregated)</option>
@@ -41,14 +35,14 @@
         </div>
 
         <div class="control-group">
-          <label for="topN">Top-N (Ranking uses dataset <code>sum</code>):</label>
+          <label for="topN">Top-N (Ranking uses Total Impact):</label>
           <select id="topN">
             <option value="10">10</option>
             <option value="20">20</option>
             <option value="30" selected>30</option>
             <option value="50">50</option>
           </select>
-          <div class="helper">Ranking is based on the dataset’s <code>sum</code> column (more accurate/credible).</div>
+          <div class="helper">Ranking uses the dataset’s Total Impact column for credibility.</div>
         </div>
 
         <div class="control-group">
@@ -75,7 +69,7 @@
           <ul>
             <li><strong>Source:</strong> <span id="dataSourceText">Level_1.csv (course dataset)</span></li>
             <li><strong>Parsing:</strong> delimiter <code>;</code>, decimal comma → dot, missing values → 0</li>
-            <li><strong>Total Impact:</strong> uses dataset <code>sum</code> (credible reference)</li>
+            <li><strong>Total Impact:</strong> uses the dataset’s Total Impact column (credible reference)</li>
             <li><strong>Selected Impact:</strong> sum of chosen co-benefit columns (interactive)</li>
             <li><strong>Performance:</strong> charts use aggregation + Top-N (not all 46k labels)</li>
           </ul>
@@ -96,7 +90,7 @@
         </div>
 
         <div class="chart-container">
-          <h3>Top-N Areas (by dataset <code>sum</code>)</h3>
+          <h3>Top-N Areas (by Total Impact)</h3>
           <div id="comparisonChart" style="width:100%;height:350px;"></div>
         </div>
 

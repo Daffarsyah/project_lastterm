@@ -149,21 +149,17 @@ function initializeDashboard() {
 
   // Footer meta (credibility)
   document.getElementById("footerMeta").textContent =
-    `Loaded ${cache.meta.rows.toLocaleString()} rows | Total sum = ${cache.meta.sumTotal.toFixed(2)} | sum range: [${cache.meta.sumMin.toFixed(2)} … ${cache.meta.sumMax.toFixed(2)}]`;
+    `Loaded ${cache.meta.rows.toLocaleString()} rows | Total Impact (all) = ${cache.meta.sumTotal.toFixed(2)} | Range: [${cache.meta.sumMin.toFixed(2)} … ${cache.meta.sumMax.toFixed(2)}]`;
 }
 
 function wireControls() {
-  const regionSearch = document.getElementById("regionSearch");
   const regionSelect = document.getElementById("regionSelect");
   const chartType = document.getElementById("chartType");
   const topNSelect = document.getElementById("topN");
 
   const updateDebounced = debounce(updateAllUI, 150);
 
-  regionSearch.addEventListener("input", debounce((e) => {
-    refreshRegionOptions(e.target.value);
-  }, 150));
-
+  // dropdown change -> update
   regionSelect.addEventListener("change", (e) => {
     currentRegion = e.target.value;
     updateDebounced();
@@ -176,6 +172,7 @@ function wireControls() {
     updateDebounced();
   });
 }
+
 
 function renderBenefitCheckboxes() {
   const container = document.getElementById("benefitCheckboxes");
@@ -204,16 +201,11 @@ function renderBenefitCheckboxes() {
 
 function refreshRegionOptions(query) {
   const regionSelect = document.getElementById("regionSelect");
-
-  // Clear all but first option
   while (regionSelect.children.length > 1) regionSelect.removeChild(regionSelect.lastChild);
 
   const q = (query || "").trim().toLowerCase();
-
-  // Show limited results for performance:
-  // - no query: top 300 by sum
-  // - query: first 200 matches (scan ranked list)
   let list;
+
   if (!q) {
     list = cache.topAreasBySum.slice(0, 300);
   } else {
@@ -234,7 +226,10 @@ function refreshRegionOptions(query) {
     opt.textContent = area;
     regionSelect.appendChild(opt);
   }
+
+  return list; // ✅ penting
 }
+
 
 function setModeBadge() {
   const badge = document.getElementById("modeBadge");
@@ -310,7 +305,7 @@ function updateStatsCards() {
 
   const cards = [
     { title: "Rows Loaded", value: cache.meta.rows.toLocaleString(), label: "Data records" },
-    { title: "Total Impact (sum)", value: totalImpactSum.toFixed(2), label: "Dataset reference metric" },
+    { title: "Total Impact", value: totalImpactSum.toFixed(2), label: "Dataset reference metric" },
     { title: "Selected Impact", value: selectedImpact.toFixed(2), label: "From chosen co-benefits" },
     { title: "Active Benefits", value: selectedBenefits.size, label: "Selected categories" },
     { title: "Top Benefit", value: topBenefit ? topBenefit.label : "-", label: "Highest contribution" },
@@ -373,7 +368,7 @@ function updateTakeaways() {
   const li2 = document.createElement("li");
   li2.textContent =
     topSum
-      ? `Highest Total Impact area (by dataset sum) is “${topSum.area}” with sum = ${topSum.value.toFixed(3)}.`
+      ? `Highest Total Impact area is “${topSum.area}” with Total Impact = ${topSum.value.toFixed(3)}.`
       : "Top area could not be computed.";
 
   const li3 = document.createElement("li");
@@ -513,7 +508,7 @@ function renderCharts() {
       name: `Top-${topN} by sum`,
       hovertemplate: "%{x}<br>sum=%{y}<extra></extra>"
     }],
-    baseLayout(`Top-${topN} Areas by Total Impact (sum)`, 350, "Area (small_area)", "sum"),
+    baseLayout(`Top-${topN} Areas by Total Impact`, 350, "Area (small_area)", "Total Impact"),
     plotConfig
   );
 
@@ -529,7 +524,7 @@ function renderCharts() {
         name: "Top 10 by sum",
         hovertemplate: "%{x}<br>sum=%{y}<extra></extra>"
       }],
-      baseLayout("Top 10 Areas (Total Impact = sum)", 400, "Area (small_area)", "sum"),
+      baseLayout("Top 10 Areas (Total Impact)", 400, "Area (small_area)", "Total Impact"),
       plotConfig
     );
   } else {
