@@ -485,17 +485,38 @@ function renderCharts() {
       Plotly.react("mainChart", data, baseLayout("Overview of Co-benefits (Selected Impact)", 350, "Benefit", "Score"), plotConfig);
     }
   } else {
-    const row = cache.byArea.get(currentRegion);
-    const x = Array.from(selectedBenefits).map(b => benefitLabels[b]);
-    const y = Array.from(selectedBenefits).map(b => row?.[b] || 0);
+  const row = cache.byArea.get(currentRegion);
+  if (!row) return;
 
-    Plotly.react(
-      "mainChart",
-      [{ type: "bar", x, y, name: "Selected Impact", hovertemplate: "%{x}<br>Score=%{y}<extra></extra>" }],
-      baseLayout(`Breakdown for ${currentRegion} (Selected Impact)`, 350, "Benefit", "Score"),
-      plotConfig
-    );
+  const labels = Array.from(selectedBenefits).map(b => benefitLabels[b]);
+  const values = Array.from(selectedBenefits).map(b => row[b] || 0);
+
+  let data;
+
+  if (chartType === "pie") {
+    data = [{
+      type: "pie",
+      labels,
+      values: values.map(v => Math.max(0, v)),
+      textinfo: "label+percent",
+    }];
+  } else {
+    // fallback aman untuk bar / heatmap / scatter
+    data = [{
+      type: "bar",
+      x: labels,
+      y: values,
+      hovertemplate: "%{x}<br>Score=%{y}<extra></extra>"
+    }];
   }
+
+  Plotly.react(
+    "mainChart",
+    data,
+    baseLayout(`Breakdown for ${currentRegion} (Selected Impact)`, 350, "Benefit", "Score"),
+    plotConfig
+  );
+}
 
   // --- COMPARISON (Ranking by dataset sum) ---
   const top = getTopNAreasBySum(topN);
